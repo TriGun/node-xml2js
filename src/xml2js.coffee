@@ -160,6 +160,10 @@ class exports.Parser extends events.EventEmitter
     @reset()
 
   assignOrPush: (obj, key, newValue) =>
+
+    if parseFloat(newValue) || parseFloat(newValue) == 0
+      newValue = parseFloat(newValue)
+
     if key not of obj
       if not @options.explicitArray
         obj[key] = newValue
@@ -212,6 +216,10 @@ class exports.Parser extends events.EventEmitter
           if attrkey not of obj and not @options.mergeAttrs
             obj[attrkey] = {}
           newValue = node.attributes[key]
+
+          if parseFloat(newValue) || parseFloat(newValue) == 0
+            newValue = parseFloat(newValue)
+
           processedKey = if @options.attrNameProcessors then processName(@options.attrNameProcessors, key) else key
           if @options.mergeAttrs
             @assignOrPush obj, processedKey, newValue
