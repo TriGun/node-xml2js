@@ -45,6 +45,7 @@ exports.defaults =
     strict: true
     attrNameProcessors: null
     tagNameProcessors: null
+    typing: true
 
   "0.2":
     explicitCharkey: false
@@ -53,9 +54,9 @@ exports.defaults =
     normalizeTags: false
     attrkey: "$"
     charkey: "_"
-    explicitArray: true
+    explicitArray: false
     ignoreAttrs: false
-    mergeAttrs: false
+    mergeAttrs: true
     explicitRoot: true
     validator: null
     xmlns : false
@@ -73,6 +74,7 @@ exports.defaults =
     doctype: null
     renderOpts: { 'pretty': true, 'indent': '  ', 'newline': '\n' }
     headless: false
+    typing: true
 
 class exports.ValidationError extends Error
   constructor: (message) ->
@@ -101,6 +103,7 @@ class exports.Builder
       rootName = @options.rootName
 
     render = (element, obj) ->
+
       if typeof obj isnt 'object'
         # single element, just append it as text
         element.txt obj
@@ -135,8 +138,7 @@ class exports.Builder
 
       element
 
-    rootElement = builder.create(rootName, @options.xmldec, @options.doctype,
-      headless: @options.headless)
+    rootElement = builder.create(rootName, @options.xmldec, @options.doctype, headless: @options.headless)
 
     render(rootElement, rootObj).end(@options.renderOpts)
 
@@ -159,19 +161,39 @@ class exports.Parser extends events.EventEmitter
 
     @reset()
 
+  typingValue: (newValue) ->
+    if (Number(newValue) || Number(newValue) is 0) && String(Number(newValue)) is newValue
+      newValue = Number(newValue)
+    else
+      return newValue
+
   assignOrPush: (obj, key, newValue) =>
 
-    if parseFloat(newValue) || parseFloat(newValue) == 0
-      newValue = parseFloat(newValue)
+    if @options.typing
+      newValue = @typingValue newValue
+
+#    move in options and functions
+    if key is 'controlPoints'
+      newValue = newValue.split ','
+
+    if key is 'image_id'
+      key = 'imageId'
 
     if key not of obj
-      if not @options.explicitArray
-        obj[key] = newValue
+      if @options.explicitArray or key is 'obj' or key is 'page'
+        if key is 'page'
+          obj[key] = {}
+          obj[key][newValue.id] = newValue
+        else
+          obj[key] = [newValue]
       else
-        obj[key] = [newValue]
+        obj[key] = newValue
     else
-      obj[key] = [obj[key]] if not (obj[key] instanceof Array)
-      obj[key].push newValue
+      if key is 'page'
+        obj[key][newValue.id] = newValue
+      else
+        obj[key] = [obj[key]] if not (obj[key] instanceof Array)
+        obj[key].push newValue
 
   reset: =>
     # remove all previous listeners for events, to prevent event listener
@@ -217,8 +239,8 @@ class exports.Parser extends events.EventEmitter
             obj[attrkey] = {}
           newValue = node.attributes[key]
 
-          if parseFloat(newValue) || parseFloat(newValue) == 0
-            newValue = parseFloat(newValue)
+          if @options.typing
+            newValue = @typingValue newValue
 
           processedKey = if @options.attrNameProcessors then processName(@options.attrNameProcessors, key) else key
           if @options.mergeAttrs

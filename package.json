@@ -34,7 +34,7 @@
     "Dave Aitken <dave.aitken@gmail.com> (http://www.actionshrimp.com/)",
     "Shaney Orrowe <shaney.orrowe@practiceweb.co.uk>"
   ],
-  "main" : "./lib/xml2js",
+  "main" : "./lib/index",
   "directories" : {
     "lib": "./lib"
   },

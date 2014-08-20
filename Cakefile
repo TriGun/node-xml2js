@@ -6,7 +6,7 @@ task 'build', 'continually build the JavaScript code', ->
 
 task 'doc', 'rebuild the Docco documentation', ->
   exec([
-    'docco src/xml2js.coffee'
+    'docco src/js2xml.coffee'
   ].join(' && '), (err) ->
     throw err if err
   )
