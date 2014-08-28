@@ -173,6 +173,9 @@ class exports.Parser extends events.EventEmitter
     if @options.typing
       newValue = @typingValue newValue
 
+    if key is 'text' or key is 'text_sig'
+      newValue = encodeURIComponent(unescape(newValue))
+
     if key is 'color' or key is 'c'
       newValue = @options.colorPalette[newValue]
 
